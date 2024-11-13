@@ -1,67 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Mini App</title>
-    <script async src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 20%;
-        }
-        #loading-message {
-            font-size: 24px;
-            font-weight: bold;
-            color: #0078ff;
-        }
-        #content {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Web App</title>
+  <script async src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: black;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    input {
+      background-color: rgba(255, 255, 255, 0.8);
+      width: 30%;
+    }
+
+    button {
+      background-color: green;
+      color: white;
+      cursor: pointer;
+    }
+
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+    }
+
+    #loading-message {
+      text-align: center;
+    }
+
+    #admin-actions {
+      text-align: center;
+    }
+
+    #urlInput {
+      display: flex;
+      justify-content: center;
+    }
+
+    #urlInput input {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-    <!-- Loading message when the app is accessed in a web browser -->
-    <div id="loading-message">Loading... Please open this in the Telegram app.</div>
-    
-    <!-- This content will be displayed when inside the Telegram app -->
-    <div id="content">
-        <h1>Telegram User Information</h1>
-        <p>User ID: <span id="user-id"></span></p>
-    </div>
 
-    <script>
-        // Function to check if the app is running inside Telegram
-        function isTelegramApp() {
-            return window.Telegram && window.Telegram.WebApp;
+  <div id="loading-message">Loading... Please open this in the Telegram app.</div>
+
+  <div id="admin-actions" style="display: none;">
+    <h2>Admin Actions</h2>
+    <input type="text" id="newUserId" placeholder="Enter User ID">
+    <button id="addUserIdBtn">Add ID</button>
+    <h3>Valid User IDs</h3>
+    <ul id="validUserIdsList"></ul>
+  </div>
+
+  <div id="urlInput" style="display: none;">
+    <input type="text" id="urlInputField" placeholder="Paste URL here">
+  </div>
+
+  <div id="iframeContainer" style="display: none;">
+    <iframe id="myIframe"></iframe>
+  </div>
+
+  <script>
+    const adminId = 5459502292;
+    let userData = null;
+    let validUserIds = JSON.parse(localStorage.getItem('validUserIds')) || [];
+    let timer = null;
+
+    const loadingMessage = document.getElementById('loading-message');
+    const adminActions = document.getElementById('admin-actions');
+    const urlInput = document.getElementById('urlInput');
+    const iframeContainer = document.getElementById('iframeContainer');
+    const validUserIdsList = document.getElementById('validUserIdsList');
+    const newUserIdField = document.getElementById('newUserId');
+    const addUserIdBtn = document.getElementById('addUserIdBtn');
+    const urlInputField = document.getElementById('urlInputField');
+    const iframe = document.getElementById('myIframe');
+
+    // Function to extract the 'id' from the given URL
+    function extractIdFromUrl(url) {
+      const regex = /\/s\/1([^/]+)/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    // Load user data from Telegram Web App
+    function loadUserData() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        const user = window.Telegram.WebApp.initDataUnsafe.user;
+        if (user) {
+          userData = user;
+          document.getElementById('loading-message').style.display = 'none';
+          if (user.id === adminId) {
+            adminActions.style.display = 'block';
+          } else if (validUserIds.includes(user.id)) {
+            urlInput.style.display = 'block';
+            iframeContainer.style.display = 'block';
+          }
         }
+      }
+    }
 
-        window.addEventListener('load', function() {
-            console.log('Page Loaded');
-            console.log('isTelegramApp:', isTelegramApp());  // Log if we're in the Telegram app
+    // Save valid user IDs to localStorage
+    function saveValidUserIds() {
+      localStorage.setItem('validUserIds', JSON.stringify(validUserIds));
+      updateValidUserIdsList();
+    }
 
-            // Check if we are inside the Telegram app
-            if (isTelegramApp()) {
-                console.log('Inside Telegram app!');
-                // Initialize Telegram Web App
-                Telegram.WebApp.init();
+    // Add a new user ID to the valid user list
+    addUserIdBtn.addEventListener('click', () => {
+      const newId = parseInt(newUserIdField.value);
+      if (!isNaN(newId) && !validUserIds.includes(newId)) {
+        validUserIds.push(newId);
+        saveValidUserIds();
+        newUserIdField.value = ''; // Clear the input
+      }
+    });
 
-                // Retrieve the user data (get user ID from init data)
-                const userId = Telegram.WebApp.initDataUnsafe ? Telegram.WebApp.initDataUnsafe.user.id : 'No user data available';
+    // Remove a user ID from the valid user list
+    function removeUserId(id) {
+      validUserIds = validUserIds.filter(userId => userId !== id);
+      saveValidUserIds();
+    }
 
-                // Hide loading message and show the user ID content
-                document.getElementById('loading-message').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                
-                // Display the user's Telegram ID
-                document.getElementById('user-id').textContent = userId;
-            } else {
-                console.log('Not inside Telegram app');
-                // If not inside Telegram, show the loading message
-                document.getElementById('loading-message').textContent = "Loading... Please open this in the Telegram app.";
-            }
-        });
-    </script>
+    // Update the valid user IDs list display
+    function updateValidUserIdsList() {
+      validUserIdsList.innerHTML = '';
+      validUserIds.forEach(id => {
+        const listItem = document.createElement('li');
+        listItem.textContent = id;
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        removeButton.addEventListener('click', () => removeUserId(id));
+        listItem.appendChild(removeButton);
+        validUserIdsList.appendChild(listItem);
+      });
+    }
+
+    // Handle input field changes
+    urlInputField.addEventListener('input', function(event) {
+      const url = event.target.value;
+      const id = extractIdFromUrl(url);
+      if (id) {
+        const embedUrl = `https://www.terabox.com/sharing/embed?surl=${id}`;
+        iframe.src = embedUrl;
+        resetFadeOut();
+      }
+    });
+
+    function resetFadeOut() {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      timer = setTimeout(() => {
+        urlInput.style.display = 'none';
+        urlInputField.value = ''; // Clear the URL
+        urlInputField.blur();
+      }, 2000);
+    }
+
+    // Focus handler for input
+    urlInputField.addEventListener('focus', function() {
+      urlInput.style.display = 'block';
+      resetFadeOut();
+    });
+
+    // Call the loadUserData function when the page loads
+    window.addEventListener('load', loadUserData);
+  </script>
 </body>
 </html>
