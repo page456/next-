@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini App</title>
+    <script async src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 20%;
+        }
+        #loading-message {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0078ff;
+        }
+        #content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-message">Loading... Please open this in the Telegram app.</div>
+    <div id="content">
+        <h1>Telegram User Information</h1>
+        <p>User ID: <span id="user-id"></span></p>
+    </div>
+
+    <script>
+        // Function to detect if the app is running inside Telegram
+        function isTelegramApp() {
+            return window.Telegram && window.Telegram.WebApp;
+        }
+
+        // Initialize Web App if running in Telegram, otherwise show a loading message
+        window.addEventListener('load', function() {
+            if (isTelegramApp()) {
+                // Telegram Web App initialization
+                Telegram.WebApp.init();
+                const userId = Telegram.WebApp.initDataUnsafe.user.id;
+
+                // Hide loading message and show content
+                document.getElementById('loading-message').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                // Display the user ID
+                document.getElementById('user-id').textContent = userId;
+            } else {
+                // If not in Telegram, display loading message
+                document.getElementById('loading-message').textContent = "Loading... Please open this in the Telegram app.";
+            }
+        });
+    </script>
+</body>
+</html>
