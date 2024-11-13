@@ -1,20 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Mini App</title>
+    <script async src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 20%;
+        }
+        #loading-message {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0078ff;
+        }
+        #content {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div id="user-info"></div>
+    <!-- Loading message when the app is accessed in a web browser -->
+    <div id="loading-message">Loading... Please open this in the Telegram app.</div>
+    
+    <!-- This content will be displayed when inside the Telegram app -->
+    <div id="content">
+        <h1>Telegram User Information</h1>
+        <p>User ID: <span id="user-id"></span></p>
+    </div>
 
     <script>
-        window.onload = function() {
-            const userData = window.Telegram.WebApp.initDataUnsafe;
-            const userId = userData.user.id;
-            const userName = userData.user.first_name;
+        // Function to check if the app is running inside Telegram
+        function isTelegramApp() {
+            return window.Telegram && window.Telegram.WebApp;
+        }
 
-            const userInfoElement = document.getElementById('user-info');
-            userInfoElement.textContent = `User ID: ${userId}\nUser Name: ${userName}`;
-        };
+        window.addEventListener('load', function() {
+            console.log('Page Loaded');
+            console.log('isTelegramApp:', isTelegramApp());  // Log if we're in the Telegram app
+
+            // Check if we are inside the Telegram app
+            if (isTelegramApp()) {
+                console.log('Inside Telegram app!');
+                // Initialize Telegram Web App
+                Telegram.WebApp.init();
+
+                // Retrieve the user data (get user ID from init data)
+                const userId = Telegram.WebApp.initDataUnsafe ? Telegram.WebApp.initDataUnsafe.user.id : 'No user data available';
+
+                // Hide loading message and show the user ID content
+                document.getElementById('loading-message').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                // Display the user's Telegram ID
+                document.getElementById('user-id').textContent = userId;
+            } else {
+                console.log('Not inside Telegram app');
+                // If not inside Telegram, show the loading message
+                document.getElementById('loading-message').textContent = "Loading... Please open this in the Telegram app.";
+            }
+        });
     </script>
 </body>
 </html>
