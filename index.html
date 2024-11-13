@@ -22,33 +22,38 @@
     </style>
 </head>
 <body>
+    <!-- Loading message when the app is accessed in a web browser -->
     <div id="loading-message">Loading... Please open this in the Telegram app.</div>
+    
+    <!-- This content will be displayed when inside the Telegram app -->
     <div id="content">
         <h1>Telegram User Information</h1>
         <p>User ID: <span id="user-id"></span></p>
     </div>
 
     <script>
-        // Function to detect if the app is running inside Telegram
+        // Function to check if the app is running inside Telegram
         function isTelegramApp() {
             return window.Telegram && window.Telegram.WebApp;
         }
 
-        // Initialize Web App if running in Telegram, otherwise show a loading message
         window.addEventListener('load', function() {
+            // Check if we are inside the Telegram app
             if (isTelegramApp()) {
-                // Telegram Web App initialization
+                // Initialize Telegram Web App
                 Telegram.WebApp.init();
-                const userId = Telegram.WebApp.initDataUnsafe.user.id;
 
-                // Hide loading message and show content
+                // Retrieve the user data (get user ID from init data)
+                const userId = Telegram.WebApp.initDataUnsafe ? Telegram.WebApp.initDataUnsafe.user.id : 'No user data available';
+
+                // Hide loading message and show the user ID content
                 document.getElementById('loading-message').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
                 
-                // Display the user ID
+                // Display the user's Telegram ID
                 document.getElementById('user-id').textContent = userId;
             } else {
-                // If not in Telegram, display loading message
+                // If not inside Telegram, show the loading message
                 document.getElementById('loading-message').textContent = "Loading... Please open this in the Telegram app.";
             }
         });
