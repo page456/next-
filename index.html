@@ -59,6 +59,19 @@
     #urlInput input {
       display: block;
     }
+
+    .user-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .user-item {
+      margin: 10px 0;
+    }
+
+    .expired {
+      color: red;
+    }
   </style>
 </head>
 <body>
@@ -68,9 +81,9 @@
   <div id="admin-actions" style="display: none;">
     <h2>Admin Actions</h2>
     <input type="text" id="newUserId" placeholder="Enter User ID">
-    <button id="addUserIdBtn">Add ID</button>
-    <h3>Valid User IDs</h3>
-    <ul id="validUserIdsList"></ul>
+    <button id="addUserIdBtn">Add User (Full Access for 1 Day)</button>
+    <h3>Valid User IDs (with Access Expiration)</h3>
+    <ul id="validUserIdsList" class="user-list"></ul>
   </div>
 
   <div id="urlInput" style="display: none;">
@@ -113,12 +126,29 @@
           document.getElementById('loading-message').style.display = 'none';
           if (user.id === adminId) {
             adminActions.style.display = 'block';
-          } else if (validUserIds.includes(user.id)) {
+          } else if (isUserValid(user.id)) {
             urlInput.style.display = 'block';
             iframeContainer.style.display = 'block';
           }
         }
       }
+    }
+
+    // Check if the user is still valid (not expired)
+    function isUserValid(userId) {
+      const user = validUserIds.find((u) => u.id === userId);
+      if (user && user.expiration > Date.now()) {
+        return true;
+      } else {
+        removeExpiredUser(userId);
+        return false;
+      }
+    }
+
+    // Remove expired users
+    function removeExpiredUser(userId) {
+      validUserIds = validUserIds.filter((u) => u.id !== userId);
+      saveValidUserIds();
     }
 
     // Save valid user IDs to localStorage
@@ -127,32 +157,30 @@
       updateValidUserIdsList();
     }
 
-    // Add a new user ID to the valid user list
+    // Add a new user ID with full access for 1 day
     addUserIdBtn.addEventListener('click', () => {
       const newId = parseInt(newUserIdField.value);
-      if (!isNaN(newId) && !validUserIds.includes(newId)) {
-        validUserIds.push(newId);
+      if (!isNaN(newId) && !validUserIds.find(u => u.id === newId)) {
+        const expirationDate = Date.now() + 24 * 60 * 60 * 1000; // 1 day from now
+        validUserIds.push({ id: newId, expiration: expirationDate });
         saveValidUserIds();
         newUserIdField.value = ''; // Clear the input
       }
     });
 
-    // Remove a user ID from the valid user list
-    function removeUserId(id) {
-      validUserIds = validUserIds.filter(userId => userId !== id);
-      saveValidUserIds();
-    }
-
     // Update the valid user IDs list display
     function updateValidUserIdsList() {
       validUserIdsList.innerHTML = '';
-      validUserIds.forEach(id => {
+      validUserIds.forEach(user => {
         const listItem = document.createElement('li');
-        listItem.textContent = id;
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', () => removeUserId(id));
-        listItem.appendChild(removeButton);
+        listItem.className = 'user-item';
+        listItem.textContent = `User ID: ${user.id} (Expires: ${new Date(user.expiration).toLocaleString()})`;
+
+        // Add a class if the user has expired
+        if (user.expiration <= Date.now()) {
+          listItem.classList.add('expired');
+        }
+
         validUserIdsList.appendChild(listItem);
       });
     }
