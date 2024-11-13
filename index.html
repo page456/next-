@@ -4,21 +4,16 @@
     <title>Telegram Mini App</title>
 </head>
 <body>
-    <div id="userData"></div>
+    <div id="user-info"></div>
 
     <script>
         window.onload = function() {
             const userData = window.Telegram.WebApp.initDataUnsafe;
-            console.log("User Data:", userData);
-
             const userId = userData.user.id;
             const userName = userData.user.first_name;
 
-            console.log("User ID:", userId);
-            console.log("User Name:", userName);
-
-            const userDataElement = document.getElementById('userData');
-            userDataElement.textContent = `User ID: ${userId}\nUser Name: ${userName}`;
+            const userInfoElement = document.getElementById('user-info');
+            userInfoElement.textContent = `User ID: ${userId}\nUser Name: ${userName}`;
         };
     </script>
 </body>
