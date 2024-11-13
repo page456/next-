@@ -38,8 +38,12 @@
         }
 
         window.addEventListener('load', function() {
+            console.log('Page Loaded');  // Log when the page is loaded
+            console.log('isTelegramApp:', isTelegramApp());  // Log if we're in the Telegram app
+
             // Check if we are inside the Telegram app
             if (isTelegramApp()) {
+                console.log('Inside Telegram app!');
                 // Initialize Telegram Web App
                 Telegram.WebApp.init();
 
@@ -53,6 +57,7 @@
                 // Display the user's Telegram ID
                 document.getElementById('user-id').textContent = userId;
             } else {
+                console.log('Not inside Telegram app');
                 // If not inside Telegram, show the loading message
                 document.getElementById('loading-message').textContent = "Loading... Please open this in the Telegram app.";
             }
